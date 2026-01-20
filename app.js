@@ -1,4 +1,4 @@
-if (process.env.NODE_ENV != "production") {
+if (process.env.NODE_ENV !== "production") {
   require("dotenv").config();
 }
 
@@ -26,7 +26,11 @@ const reviewRouter = require("./routes/review.js");
 const userRouter = require("./routes/user.js");
 
 
-const dbUrl = process.env.ATLASDB_URL;
+const dbUrl =
+  process.env.NODE_ENV === "test"
+    ? process.env.TEST_DB_URL
+    : process.env.ATLASDB_URL;
+
 
 
 main().then(() => {
@@ -45,25 +49,33 @@ app.use(methodOverride("_method"));
 app.engine('ejs', ejsMate);
 app.use(express.static(path.join(__dirname, "public")));
 
-const store = MongoStore.create({
-  mongoUrl: dbUrl,
-  crypto: {
-    secret: process.env.SECRET,
-  },
-  touchAfter: 24 * 3600,
-});
-store.on("error", () => {
-  console.log("error in mongo session store");
-});
+let store;
+
+if (process.env.NODE_ENV !== "test") {
+  store = MongoStore.create({
+    mongoUrl: dbUrl,
+    crypto: { secret: process.env.SECRET },
+    touchAfter: 24 * 3600,
+  });
+
+  store.on("error", () => {
+    console.log("error in mongo session store");
+  });
+}
+
 const sessionOptions = {
-  store,
-  secret: process.env.SECRET, resave: false, saveUninitialized: true,
+  store: process.env.NODE_ENV === "test" ? undefined : store,
+  secret: process.env.SECRET,
+  resave: false,
+  saveUninitialized: false,
   cookie: {
-    expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
     httpOnly: true,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    secure: process.env.NODE_ENV === "production",
   },
 };
+
+
 // app.get("/",(req,res)=>{
 //     res.send("Hey! I am GROOT");
 // });
@@ -80,6 +92,7 @@ passport.serializeUser(User.serializeUser());//Generates a function that is used
 passport.deserializeUser(User.deserializeUser());//Generates a function that is used by Passport to deserialize users into the session
 
 app.use((req, res, next) => {
+  // console.log("Current User:", req.user);
   res.locals.success = req.flash("success");
   res.locals.error = req.flash("error");
   res.locals.currUser = req.user;
@@ -122,9 +135,13 @@ app.all(/.*/, (req, res, next) => {
 
 app.use((err, req, res, next) => {
   let { statusCode = 500, message = "Something went wrong" } = err;
-  res.status(statusCode).render("error.ejs", { err }); // ✅ this matches your EJS
+  res.status(statusCode).render("error.ejs", { err }); 
 });
 
-app.listen(8080, () => {
-  console.log("I am Listening");
-});
+if (process.env.NODE_ENV !== "test") {
+  app.listen(8080, () => {
+    console.log("I am Listening");
+  });
+}
+
+module.exports = app;
