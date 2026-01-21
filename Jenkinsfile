@@ -1,20 +1,19 @@
 pipeline {
     agent any
 
+    tools {
+        nodejs 'node20'
+    }
+
     environment {
         NODE_ENV = "test"
     }
 
     stages {
-
-        stage('Checkout Code') {
-            steps {
-                checkout scm
-            }
-        }
-
         stage('Install Dependencies') {
             steps {
+                sh 'node -v'
+                sh 'npm -v'
                 sh 'npm install'
             }
         }
@@ -31,7 +30,7 @@ pipeline {
             echo 'CI passed: all tests successful'
         }
         failure {
-            echo 'CI failed: tests did not pass'
+            echo 'CI failed'
         }
     }
 }
