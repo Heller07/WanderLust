@@ -64,6 +64,8 @@ if (process.env.NODE_ENV !== "test") {
   });
 }
 
+const isProduction = process.env.NODE_ENV === "production";
+
 const sessionOptions = {
   store: process.env.NODE_ENV === "test" ? undefined : store,
   secret: process.env.SECRET || "test-secret",
@@ -72,9 +74,11 @@ const sessionOptions = {
   cookie: {
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000,
-    secure: process.env.NODE_ENV === "production",
+    secure: isProduction && process.env.HTTPS === "true",
+    sameSite: "lax",
   },
 };
+
 
 
 
@@ -141,9 +145,12 @@ app.use((err, req, res, next) => {
 });
 
 if (process.env.NODE_ENV !== "test") {
-  app.listen(8080, () => {
-    console.log("I am Listening");
+  const PORT = process.env.PORT || 8080;
+
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`I am listening on port ${PORT}`);
   });
 }
+
 
 module.exports = app;
