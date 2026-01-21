@@ -55,7 +55,7 @@ let store;
 if (process.env.NODE_ENV !== "test") {
   store = MongoStore.create({
     mongoUrl: dbUrl,
-    crypto: { secret: process.env.SECRET },
+    crypto: { secret: process.env.SECRET || "test-secret",},
     touchAfter: 24 * 3600,
   });
 
@@ -66,7 +66,7 @@ if (process.env.NODE_ENV !== "test") {
 
 const sessionOptions = {
   store: process.env.NODE_ENV === "test" ? undefined : store,
-  secret: process.env.SECRET,
+  secret: process.env.SECRET || "test-secret",
   resave: false,
   saveUninitialized: false,
   cookie: {
@@ -75,6 +75,7 @@ const sessionOptions = {
     secure: process.env.NODE_ENV === "production",
   },
 };
+
 
 
 // app.get("/",(req,res)=>{

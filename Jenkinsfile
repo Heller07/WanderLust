@@ -6,8 +6,10 @@ pipeline {
     }
 
     environment {
-        NODE_ENV = "test"
+    NODE_ENV = "test"
+    SECRET = "ci-test-secret"
     }
+
 
     stages {
         stage('Install Dependencies') {
