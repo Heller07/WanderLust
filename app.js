@@ -33,11 +33,12 @@ const dbUrl =
 
 
 
-main().then(() => {
-  console.log("connected to DB");
-}).catch((err) => {
-  console.log(err);
-});
+if (process.env.NODE_ENV !== "test") {
+  main()
+    .then(() => console.log("connected to DB"))
+    .catch(err => console.log(err));
+}
+
 
 async function main() {
   await mongoose.connect(dbUrl);
